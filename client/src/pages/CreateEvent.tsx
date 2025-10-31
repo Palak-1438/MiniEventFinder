@@ -8,6 +8,7 @@ export default function CreateEvent() {
   const [description, setDescription] = useState('')
   const [location, setLocation] = useState('')
   const [date, setDate] = useState('')
+  const [category, setCategory] = useState('social')
   const [maxParticipants, setMaxParticipants] = useState(10)
   const [currentParticipants, setCurrentParticipants] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -23,6 +24,7 @@ export default function CreateEvent() {
         description,
         location,
         date,
+        category,
         maxParticipants,
         currentParticipants,
       })

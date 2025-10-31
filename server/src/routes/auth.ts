@@ -7,6 +7,13 @@ import { JWT_SECRET } from '../middleware/auth.js';
 
 const router = Router();
 
+const USE_MONGODB = process.env.USE_MONGODB === 'true';
+
+type InMemoryUser = { id: string; email: string; username: string; passwordHash: string };
+const usersByEmail = new Map<string, InMemoryUser>();
+const usersByUsername = new Map<string, InMemoryUser>();
+let nextId = 1;
+
 const registerSchema = z.object({
   email: z.string().email(),
   username: z.string().min(3),
@@ -27,29 +34,31 @@ router.post('/register', async (req, res, next) => {
 
     const { email, username, password } = parsed.data;
 
-    // Check if user already exists
-    const existing = await UserModel.findOne({ $or: [{ email }, { username }] });
-    if (existing) {
-      return res.status(400).json({ error: 'User already exists' });
+    if (USE_MONGODB) {
+      const existing = await UserModel.findOne({ $or: [{ email }, { username }] });
+      if (existing) {
+        return res.status(400).json({ error: 'User already exists' });
+      }
+      const passwordHash = await bcrypt.hash(password, 10);
+      const user = await UserModel.create({ email, username, passwordHash });
+      const token = jwt.sign({ userId: user._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
+      return res.status(201).json({
+        token,
+        user: { id: user._id.toString(), email: user.email, username: user.username }
+      });
     }
 
-    // Hash password
+    // In-memory fallback
+    if (usersByEmail.has(email) || usersByUsername.has(username)) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
     const passwordHash = await bcrypt.hash(password, 10);
-
-    // Create user
-    const user = await UserModel.create({ email, username, passwordHash });
-
-    // Generate token
-    const token = jwt.sign({ userId: user._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
-
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id.toString(),
-        email: user.email,
-        username: user.username
-      }
-    });
+    const id = String(nextId++);
+    const user: InMemoryUser = { id, email, username, passwordHash };
+    usersByEmail.set(email, user);
+    usersByUsername.set(username, user);
+    const token = jwt.sign({ userId: id }, JWT_SECRET, { expiresIn: '7d' });
+    return res.status(201).json({ token, user: { id, email, username } });
   } catch (err) {
     next(err);
   }
@@ -64,29 +73,30 @@ router.post('/login', async (req, res, next) => {
 
     const { email, password } = parsed.data;
 
-    // Find user
-    const user = await UserModel.findOne({ email });
+    if (USE_MONGODB) {
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      const valid = await bcrypt.compare(password, user.passwordHash);
+      if (!valid) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+      }
+      const token = jwt.sign({ userId: user._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
+      return res.json({ token, user: { id: user._id.toString(), email: user.email, username: user.username } });
+    }
+
+    // In-memory fallback
+    const user = usersByEmail.get(email);
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
-    // Verify password
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
-    // Generate token
-    const token = jwt.sign({ userId: user._id.toString() }, JWT_SECRET, { expiresIn: '7d' });
-
-    res.json({
-      token,
-      user: {
-        id: user._id.toString(),
-        email: user.email,
-        username: user.username
-      }
-    });
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    return res.json({ token, user: { id: user.id, email: user.email, username: user.username } });
   } catch (err) {
     next(err);
   }

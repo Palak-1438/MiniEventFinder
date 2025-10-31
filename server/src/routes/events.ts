@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { InMemoryEventRepository } from '../repositories/InMemoryEventRepository.js';
+import { MongoEventRepository } from '../repositories/MongoEventRepository.js';
 import { EventService } from '../services/EventService.js';
 import { optionalAuthMiddleware, authMiddleware, type AuthRequest } from '../middleware/auth.js';
 
-const repo = new InMemoryEventRepository();
+const USE_MONGODB = process.env.USE_MONGODB === 'true';
+const repo = USE_MONGODB ? new MongoEventRepository() : new InMemoryEventRepository();
 const service = new EventService(repo);
 
 const router = Router();

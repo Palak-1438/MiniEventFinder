@@ -7,6 +7,7 @@ export default function EventDetail() {
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [joining, setJoining] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -16,6 +17,20 @@ export default function EventDetail() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [id])
+
+  const handleJoin = async () => {
+    if (!id || !event) return
+    setJoining(true)
+    setError(null)
+    try {
+      const updated = await api.joinEvent(id)
+      setEvent(updated)
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setJoining(false)
+    }
+  }
 
   if (loading) return <p className="text-gray-600">Loading...</p>
   if (error) return <p className="text-red-600">{error}</p>
