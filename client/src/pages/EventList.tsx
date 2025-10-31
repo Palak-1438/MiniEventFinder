@@ -1,23 +1,42 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, type Event } from '../api'
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay)
+    return () => clearTimeout(timer)
+  }, [value, delay])
+  return debouncedValue
+}
 
 export default function EventList() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
-  const [filter, setFilter] = useState('')
+  
+  const [searchTitle, setSearchTitle] = useState('')
+  const [searchLocation, setSearchLocation] = useState('')
+  const [searchCategory, setSearchCategory] = useState('')
+  const [searchDate, setSearchDate] = useState('')
 
-  const filtered = useMemo(() => events, [events])
+  const debouncedTitle = useDebounce(searchTitle, 500)
+  const debouncedLocation = useDebounce(searchLocation, 500)
 
   useEffect(() => {
     setLoading(true)
-    api.listEvents(filter)
+    const filters = {
+      title: debouncedTitle || undefined,
+      location: debouncedLocation || undefined,
+      category: searchCategory || undefined,
+      date: searchDate || undefined
+    }
+    api.listEvents(filters)
       .then(setEvents)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [filter])
+  }, [debouncedTitle, debouncedLocation, searchCategory, searchDate])
 
   return (
     <div className="space-y-4">
