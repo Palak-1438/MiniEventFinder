@@ -5,11 +5,22 @@ import { randomUUID } from 'crypto';
 export class InMemoryEventRepository implements IEventRepository {
   private events: Event[] = [];
 
-  async list(filter?: { location?: string }): Promise<Event[]> {
+  async list(filters?: { location?: string; category?: string; title?: string; date?: string }): Promise<Event[]> {
     let result = this.events;
-    if (filter?.location) {
-      const q = filter.location.toLowerCase();
+    if (filters?.location) {
+      const q = filters.location.toLowerCase();
       result = result.filter(e => e.location.toLowerCase().includes(q));
+    }
+    if (filters?.category) {
+      result = result.filter(e => e.category === filters.category);
+    }
+    if (filters?.title) {
+      const q = filters.title.toLowerCase();
+      result = result.filter(e => e.title.toLowerCase().includes(q));
+    }
+    if (filters?.date) {
+      const targetDate = new Date(filters.date).toDateString();
+      result = result.filter(e => new Date(e.date).toDateString() === targetDate);
     }
     // Sort by date ascending
     return [...result].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -19,7 +30,7 @@ export class InMemoryEventRepository implements IEventRepository {
     return this.events.find(e => e.id === id) ?? null;
   }
 
-  async create(input: EventCreateInput): Promise<Event> {
+  async create(input: EventCreateInput & { createdBy?: string }): Promise<Event> {
     const currentParticipants = input.currentParticipants ?? 0;
     const event: Event = {
       id: randomUUID(),
@@ -27,10 +38,20 @@ export class InMemoryEventRepository implements IEventRepository {
       description: input.description,
       location: input.location,
       date: new Date(input.date).toISOString(),
+      category: input.category,
       maxParticipants: input.maxParticipants,
-      currentParticipants
+      currentParticipants,
+      createdBy: input.createdBy,
+      coordinates: input.coordinates
     };
     this.events.push(event);
+    return event;
+  }
+
+  async incrementParticipants(id: string): Promise<Event | null> {
+    const event = this.events.find(e => e.id === id);
+    if (!event) return null;
+    event.currentParticipants++;
     return event;
   }
 }
