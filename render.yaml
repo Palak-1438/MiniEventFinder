@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: mini-event-finder-server
+    env: node
+    rootDirectory: server
+    plan: free
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
