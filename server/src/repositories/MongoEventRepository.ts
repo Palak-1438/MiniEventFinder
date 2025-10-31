@@ -32,7 +32,9 @@ export class MongoEventRepository implements IEventRepository {
       maxParticipants: doc.maxParticipants,
       currentParticipants: doc.currentParticipants,
       createdBy: doc.createdBy?.toString(),
-      coordinates: doc.coordinates
+      coordinates: doc.coordinates && doc.coordinates.lat != null && doc.coordinates.lng != null
+        ? { lat: doc.coordinates.lat, lng: doc.coordinates.lng }
+        : undefined
     }));
   }
 
@@ -49,7 +51,9 @@ export class MongoEventRepository implements IEventRepository {
       maxParticipants: doc.maxParticipants,
       currentParticipants: doc.currentParticipants,
       createdBy: doc.createdBy?.toString(),
-      coordinates: doc.coordinates
+      coordinates: doc.coordinates && doc.coordinates.lat != null && doc.coordinates.lng != null
+        ? { lat: doc.coordinates.lat, lng: doc.coordinates.lng }
+        : undefined
     };
   }
 
@@ -65,7 +69,9 @@ export class MongoEventRepository implements IEventRepository {
       maxParticipants: doc.maxParticipants,
       currentParticipants: doc.currentParticipants,
       createdBy: doc.createdBy?.toString(),
-      coordinates: doc.coordinates
+      coordinates: doc.coordinates && doc.coordinates.lat != null && doc.coordinates.lng != null
+        ? { lat: doc.coordinates.lat, lng: doc.coordinates.lng }
+        : undefined
     };
   }
 
@@ -86,7 +92,9 @@ export class MongoEventRepository implements IEventRepository {
       maxParticipants: doc.maxParticipants,
       currentParticipants: doc.currentParticipants,
       createdBy: doc.createdBy?.toString(),
-      coordinates: doc.coordinates
+      coordinates: doc.coordinates && doc.coordinates.lat != null && doc.coordinates.lng != null
+        ? { lat: doc.coordinates.lat, lng: doc.coordinates.lng }
+        : undefined
     };
   }
 }
