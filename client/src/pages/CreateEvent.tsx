@@ -42,6 +42,17 @@ export default function CreateEvent() {
         <textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="Description" className="w-full rounded border border-gray-300 px-3 py-2" required />
         <input value={location} onChange={e=>setLocation(e.target.value)} placeholder="Location" className="w-full rounded border border-gray-300 px-3 py-2" required />
         <input type="datetime-local" value={date} onChange={e=>setDate(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2" required />
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">Category</label>
+          <select value={category} onChange={e=>setCategory(e.target.value)} className="w-full rounded border border-gray-300 px-3 py-2">
+            <option value="social">Social</option>
+            <option value="sports">Sports</option>
+            <option value="music">Music</option>
+            <option value="tech">Tech</option>
+            <option value="food">Food</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm text-gray-600">Max participants</label>

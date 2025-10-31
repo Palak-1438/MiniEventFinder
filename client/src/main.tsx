@@ -6,6 +6,9 @@ import App from './App'
 import EventList from './pages/EventList'
 import EventDetail from './pages/EventDetail'
 import CreateEvent from './pages/CreateEvent'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import { AuthProvider } from './contexts/AuthContext'
 
 const router = createBrowserRouter([
   {
@@ -15,12 +18,16 @@ const router = createBrowserRouter([
       { index: true, element: <EventList /> },
       { path: 'events/:id', element: <EventDetail /> },
       { path: 'create', element: <CreateEvent /> },
+      { path: 'login', element: <Login /> },
+      { path: 'register', element: <Register /> },
     ],
   },
 ])
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </React.StrictMode>,
 )
